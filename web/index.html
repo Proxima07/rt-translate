@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fafafb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121317" media="(prefers-color-scheme: dark)">
+  <title>即時逐字稿</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <main id="stage">
+    <div id="transcript" tabindex="0">
+      <p id="empty">按下麥克風，開始即時逐字稿。</p>
+      <div id="caret" hidden aria-hidden="true"></div>
+    </div>
+
+    <button id="jump" hidden>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v11M3 8.5 8 13.5 13 8.5"/></svg>
+      <span id="jump-count"></span>
+    </button>
+  </main>
+
+  <footer id="controls">
+    <div id="langs">
+      <select id="source-lang" aria-label="來源語言">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+      </select>
+      <svg id="dir" viewBox="0 0 24 12" aria-hidden="true"><path d="M1 6h20M17 2l5 4-5 4"/></svg>
+      <select id="target-lang" aria-label="翻譯成">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="ja">日本語</option>
+      </select>
+      <span id="status"></span>
+    </div>
+
+    <button id="mic" aria-label="開始錄音">
+      <span id="ring" aria-hidden="true"></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="9" y="2.5" width="6" height="11" rx="3"/>
+        <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>
+      </svg>
+    </button>
+  </footer>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Windows 開發 / Linux 部署的必要設定。
+# 沒有這個檔案，Git 可能把 CRLF 提交進 repo，
+# 到 Rasp 上會出現 "bad interpreter: /bin/bash^M" 之類的錯誤。
+* text=auto eol=lf
+
+*.py   text eol=lf
+*.js   text eol=lf
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.md   text eol=lf
+Dockerfile text eol=lf
+
+*.wav  binary
+*.opus binary
+*.png  binary

@@ -1,0 +1,26 @@
+services:
+  rt-translate:
+    build: .
+    container_name: rt-translate
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:8091:8091"
+
+    env_file: .env
+
+    # ── 零保存的強制手段 ───────────────────────────
+    # 不是「我們沒有寫檔案」，而是「寫不進去」。
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    # ──────────────────────────────────────────────
+
+    mem_limit: 1g
+    cpus: 3.0
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,19 @@
+# rt-translate — 開發相依（只在 Windows / PyCharm 開發機安裝）
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# 這份不要裝到 Rasp 上。matplotlib 在 ARM64 上裝得慢，
+# 而且視覺化工具本來就只在開發機跑。
+
+-r requirements.txt
+
+# ── 測試 ────────────────────────────────────────────────────
+pytest>=8
+
+# ── tools/visualize_segmentation.py ─────────────────────────
+matplotlib>=3.9      # 畫波形 + VAD 曲線 + 切點
+soundfile>=0.12      # 讀 wav（wheel 已內含 libsndfile，不用另外裝）
+scipy>=1.14          # resample_poly，把任意取樣率轉到 16kHz
+
+# ── S5 才會用到，現在先不裝 ──────────────────────────────────
+# librosa>=0.10      # F0 抽取（§4.5 韻律訊號）

@@ -1,0 +1,213 @@
+/* ───────────────────────────────────────────────────────────
+   即時逐字稿 — 監看型介面
+
+   設計原則:
+   1. 文字是主角。使用者 95% 的注意力在轉錄內容上，
+      所以除了麥克風以外的一切都要退到背景。
+   2. 顏色是狀態，不是裝飾。閒置時整個介面單色；
+      只有真的在收音時才出現訊號綠。
+   3. 譯文左側的細線帶顏色，編碼潤飾層級（L1 淡 → L2/L3 實）。
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  --paper:    #fafafb;
+  --ink:      #1a1d23;   /* 原文 */
+  --dim:      #6e737d;   /* 譯文、次要資訊 */
+  --faint:    #a8adb6;
+  --rule:     #e3e5e9;
+  --live:     #1f7a5c;   /* 訊號綠 —— 只在收音時出現 */
+  --live-soft:#1f7a5c26;
+
+  --step-0:   1.0625rem; /* 原文 */
+  --step--1:  0.9375rem; /* 譯文 */
+  --step--2:  0.8125rem; /* 狀態、控制項 */
+
+  /* TC 排在 JP 前面，讓中日共用漢字在 lang=zh 時取正確字形。
+     不放 Google Fonts —— 這是自架服務，離線也要能用。 */
+  --sans: "Inter", "Helvetica Neue", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei",
+          "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:    #121317;
+    --ink:      #e6e7ea;
+    --dim:      #878c96;
+    --faint:    #5a5f68;
+    --rule:     #26282e;
+    --live:     #35a57c;
+    --live-soft:#35a57c2e;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+:focus-visible { outline: 2px solid var(--live); outline-offset: 3px; }
+
+/* ── 轉錄區（綠色區塊）────────────────────────────────── */
+
+#stage { flex: 1; min-height: 0; position: relative; }
+
+#transcript {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 5vw, 2rem) 2rem;
+}
+
+/* 一行不超過 ~66 字元。長行會讓眼睛在換行時找不到位置，
+   而即時字幕是一直在往下長的，找不到位置的代價比靜態文章更高。 */
+#transcript > * { max-width: 40rem; margin-inline: auto; }
+
+#empty {
+  color: var(--faint);
+  font-size: var(--step--1);
+  margin-top: 18vh;
+  text-align: center;
+}
+
+.seg { margin: 0 0 1.45rem; animation: rise .22s ease-out; }
+.seg .src { line-height: 1.7; letter-spacing: .01em; }
+
+/* 譯文靠左側細線與原文區分，不用縮排框或卡片。
+   線的顏色就是潤飾層級。 */
+.seg .dst {
+  margin-top: .3rem;
+  padding-left: .85rem;
+  border-left: 2px solid var(--rule);
+  color: var(--dim);
+  font-size: var(--step--1);
+  line-height: 1.65;
+  transition: border-color .4s ease, color .4s ease;
+}
+.seg.l1 .dst { border-left-color: var(--live-soft); color: var(--faint); }
+.seg.l2 .dst,
+.seg.l3 .dst { border-left-color: var(--live); }
+
+/* 插入點游標：偵測到語音時閃爍，告訴你「字要出現在這裡」。
+   這取代了「辨識中…」那行字 —— 同樣的資訊，不佔版面。 */
+#caret {
+  max-width: 40rem; margin-inline: auto;
+  width: 2px; height: 1.2em;
+  background: var(--live);
+  animation: blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(3px); } }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── 捲回底部 ─────────────────────────────────────────── */
+
+#jump {
+  position: absolute; left: 50%; bottom: 1rem;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: .4rem;
+  padding: .4rem .85rem .4rem .7rem;
+  font: inherit; font-size: var(--step--2);
+  color: var(--paper); background: var(--ink);
+  border: none; border-radius: 999px; cursor: pointer;
+  box-shadow: 0 2px 12px #0000002e;
+}
+#jump svg { width: 14px; height: 14px; }
+
+/* ── 控制列（藍色區塊）────────────────────────────────── */
+
+#controls {
+  display: flex; align-items: center; gap: 1rem;
+  padding: .85rem clamp(1rem, 5vw, 2rem);
+  padding-bottom: calc(.85rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--rule);
+}
+
+#langs {
+  flex: 1;
+  display: flex; align-items: center; gap: .55rem;
+  min-width: 0;
+  padding: .5rem .85rem;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+}
+
+#langs select {
+  font: inherit; font-size: var(--step--2);
+  color: var(--ink); background: none;
+  border: none; padding: .1rem .15rem;
+  cursor: pointer;
+}
+#langs select:disabled { cursor: default; opacity: 1; }
+
+/* 這個箭頭是翻譯方向，是資訊不是裝飾 */
+#dir { width: 22px; height: 11px; color: var(--faint); flex: none; }
+
+#status {
+  margin-left: auto;
+  font-size: var(--step--2);
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+#status.live { color: var(--live); }
+
+/* ── 麥克風：整個介面唯一大膽的地方 ───────────────────── */
+
+#mic {
+  position: relative; flex: none;
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  color: var(--ink); background: none;
+  border: 1.5px solid var(--rule);
+  border-radius: 50%; cursor: pointer;
+  transition: border-color .2s, color .2s, background-color .2s;
+}
+#mic svg { width: 22px; height: 22px; position: relative; }
+
+#mic[data-state="live"] {
+  color: var(--paper);
+  background: var(--live);
+  border-color: var(--live);
+}
+
+/* 外圈是真的電平表 —— --level 由 JS 依音訊 RMS 設定。
+   不是裝飾脈動，所以不受 reduced-motion 停用：
+   它是唯一告訴你「麥克風真的在收音」的回饋。 */
+#ring {
+  position: absolute; inset: -1.5px;
+  border-radius: 50%;
+  border: 2px solid var(--live);
+  opacity: calc(var(--level, 0) * .9);
+  transform: scale(calc(1 + var(--level, 0) * .28));
+  transition: transform .09s linear, opacity .09s linear;
+  pointer-events: none;
+}
+
+#mic[data-state="wait"] { border-style: dashed; color: var(--faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  .seg { animation: none; }
+  #caret { animation: none; opacity: .8; }
+}
+
+/* ── 直式（手機）：語言列整行，麥克風置中在下 ─────────── */
+
+@media (max-width: 560px) {
+  #controls { flex-direction: column; gap: .8rem; }
+  #langs { width: 100%; }
+  #mic { width: 60px; height: 60px; }
+}

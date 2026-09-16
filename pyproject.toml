@@ -1,0 +1,24 @@
+[project]
+name = "rt-translate"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "websockets>=13",
+    "onnxruntime>=1.19",
+    "numpy>=1.26",
+    "httpx>=0.27",
+    "openai>=1.50",
+]
+
+[project.optional-dependencies]
+# 只在開發機安裝。部署到 Rasp 時用 `pip install .`，不含這些。
+dev = [
+    "pytest>=8",
+    "matplotlib>=3.9",   # tools/visualize_segmentation.py
+    "soundfile>=0.12",   # tools/
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

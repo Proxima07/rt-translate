@@ -1,0 +1,49 @@
+# rt-translate — 執行時相依（部署到 Rasp 用這份）
+#
+#   pip install -r requirements.txt
+#
+# 刻意不含 pytest / matplotlib / soundfile —— 那些只在開發機需要，
+# 見 requirements-dev.txt。
+
+# ── Web ─────────────────────────────────────────────────────
+fastapi>=0.115
+uvicorn[standard]>=0.32
+# uvicorn[standard] 已含 websockets / httptools / python-dotenv /
+# uvloop(非 Windows) / watchfiles。Windows 上 uvloop 會自動跳過。
+
+# .env 載入。uvicorn[standard] 雖然也帶了，但這裡明列 ——
+# tools/ 和 pytest 不經過 uvicorn，一樣需要它。
+python-dotenv>=1.0
+
+# ── 音訊 ────────────────────────────────────────────────────
+numpy>=1.26
+
+# Silero VAD 推論。
+#
+# ★ 不要 pip install silero-vad ——
+#   那個套件的 metadata 硬性要求 torch + torchaudio，
+#   就算只裝 [onnx-cpu] extra 也會拉下來。
+#   Pi 5 ARM64 上那是幾百 MB，而我們只需要 ONNX 推論。
+#
+#   改為把模型檔放進 repo:
+#     app/audio/models/silero_vad_16k_op15.onnx   (約 1.26 MB)
+#
+#   取得方式（在開發機上做一次就好）:
+#     pip download silero-vad --no-deps -d /tmp/sv
+#     # 解開那個 .whl，取出 silero_vad/data/silero_vad_16k_op15.onnx
+#
+#   我們固定 16kHz，用 16k_op15 那顆即可。
+onnxruntime>=1.19
+
+# ── 外部服務 ────────────────────────────────────────────────
+openai>=1.50
+httpx>=0.27
+
+
+# ── 版本鎖定 ────────────────────────────────────────────────
+# 上面用 >= 下限，方便 Windows / ARM64 各自取到有 wheel 的版本。
+# 真的要可重現的部署，在驗證過的環境跑一次:
+#
+#     pip freeze > requirements.lock.txt
+#
+# 然後 Rasp 上用 lock 檔安裝。
